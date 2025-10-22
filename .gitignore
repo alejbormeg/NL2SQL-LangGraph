@@ -131,7 +131,6 @@ env.bak/
 venv.bak/
 
 # Local env files and IDE settings
-.env.*
 .vscode/
 .DS_Store
 
