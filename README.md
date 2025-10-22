@@ -19,16 +19,18 @@ Ask questions in natural language and get executable SQL, results, and beautiful
 
 ```mermaid
 flowchart LR
-  U[User 🧑‍💻] --> FE[Starlite Frontend ⚡]
-  FE --> BE[FastAPI Backend 🚀]
-  BE -->|retrieval| V[(pgvector 📦)]
-  BE -->|SQL| PG[(PostgreSQL 🐘)]
-  subgraph Agents 🤝
+  U[User] --> FE[Starlite Frontend]
+  FE --> BE[FastAPI Backend]
+  BE -->|retrieval| V[(pgvector)]
+  BE -->|SQL| PG[(PostgreSQL)]
+  subgraph Agents
     P[Planner]
-    S[NL→SQL]
+    S[NL2SQL]
     F[Feedback]
   end
-  BE <---> Agents
+  BE <---> P
+  BE <---> S
+  BE <---> F
 ```
 
 
