@@ -1,0 +1,89 @@
+version: "3.9"
+
+services:
+  db:
+    image: ankane/pgvector:latest
+    container_name: pgvector
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vector_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+      - ../databases/_initdb:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-alejbormeg@gmail.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_LISTEN_PORT: "80"
+      # auto-load/refresh server definitions from servers.json on each start
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      # Preload a connection to the "db" service
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ..
+      dockerfile: architecture/backend/Dockerfile
+    container_name: genia-backend
+    restart: unless-stopped
+    environment:
+      POSTGRESQL_HOST: db
+      POSTGRESQL_PORT: "5432"
+      POSTGRESQL_USER: ${POSTGRES_USER:-postgres}
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRESQL_DATABASE: ${POSTGRES_DB:-vector_db}
+      DEFAULT_CHUNK_SIZE: "1536"
+      PGVECTOR_TABLE: vector_embeddings_1536
+      PGVECTOR_DIMENSIONS: "1536"
+      PGVECTOR_TOP_K: "3"
+      GPT_MODEL: gpt-4o-mini
+      GPT_EMBEDDING_ENGINE: text-embedding-3-large
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: architecture/frontend/Dockerfile
+    container_name: genia-frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://localhost:8001
+      DEFAULT_CHUNK_SIZE: "1536"
+      POSTGRESQL_DATABASE: ${POSTGRES_DB:-vector_db}
+      GPT_EMBEDDING_ENGINE: text-embedding-3-large
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgvector_data:
+    driver: local
+  pgadmin_data:
+    driver: local

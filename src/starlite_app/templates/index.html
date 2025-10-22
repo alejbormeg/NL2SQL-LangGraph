@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Plataforma GenIA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f8fafc" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Minimal light theme: greys + pastel blues */
+      --bg: #f7f9fc;          /* app background */
+      --bg-2: #f1f5f9;        /* subtle section background */
+      --panel: #ffffff;       /* cards / panels */
+      --panel-raised: #f8fafc;/* raised areas */
+      --muted: #64748b;       /* muted text */
+      --accent: #7aa7d9;      /* pastel blue */
+      --accent-2: #b7d0ea;    /* lighter pastel */
+      --accent-soft: rgba(122,167,217,0.14);
+      --text: #0f172a;        /* primary text */
+      --border: #e2e8f0;      /* soft grey border */
+      --error: #ef4444;
+      --ok: #16a34a;
+      --glow: 0 8px 20px rgba(2,6,23,0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background-attachment: fixed;
+    }
+
+    /* subtle animated noise / grain overlay to add depth to gradients */
+    body::before {
+      /* keep a very subtle texture for depth */
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' viewBox='0 0 100 100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 0 0 0 0.02 0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)'/%3E%3C/svg%3E");
+      mix-blend-mode: normal;
+      opacity: .06;
+      animation: grain 12s steps(6) infinite;
+    }
+
+    @keyframes grain { 0% {transform: translate(0,0);} 10%{transform: translate(-1%, 1%);} 20%{transform: translate(1%, -1%);} 30%{transform: translate(-2%, 1%);} 40%{transform: translate(1%, 2%);} 50%{transform: translate(0,0);} 60%{transform: translate(1%, -2%);} 70%{transform: translate(-1%, 2%);} 80%{transform: translate(2%, -1%);} 90%{transform: translate(-2%, 1%);} 100%{transform: translate(0,0);} }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-y: auto;
+    }
+
+    .app { width: min(1180px, 94vw); margin: 3.2rem 0 5rem; }
+
+    /* ====== Top App Bar / Branding ====== */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1.25rem; padding: .6rem .2rem;
+    }
+    .brand { display: flex; align-items: center; gap: .8rem; }
+    .brand-logo {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: var(--glow);
+      position: relative; isolation: isolate;
+      border: 1px solid var(--border);
+    }
+    .brand-logo::after { content: ""; position: absolute; inset: 0; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.08)); opacity: .4; }
+    .brand h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: .02em; }
+    .chiprow { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .chip {
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      padding: .28rem .6rem; border-radius: 999px; font-size: .78rem; color: #1e3a8a;
+    }
+
+    h1, h2, h3 { margin: 0; font-weight: 700; }
+    p.muted, span.muted { color: var(--muted); }
+
+    /* ====== Buttons ====== */
+    button {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #0f172a; border: 1px solid #cfe1f4; padding: 0.72rem 1.1rem; border-radius: 12px;
+      font-weight: 700; cursor: pointer; letter-spacing: .01em;
+      transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease, filter 120ms ease;
+      box-shadow: var(--glow);
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(122,167,217,.25); }
+    button:active { transform: translateY(0); filter: saturate(105%); }
+    button.secondary {
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    button.secondary:hover { background: var(--bg-2); border-color: #cbd5e1; }
+
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%; padding: 0.7rem .9rem; border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text); outline: none; font-size: .96rem;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(147,197,253,.35); }
+    textarea { min-height: 140px; resize: vertical; }
+
+    .helper { font-size: 0.85rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* ====== Cards (glassmorphism-ish) ====== */
+    .card {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.35rem 1.5rem; box-shadow: 0 10px 30px rgba(2,6,23,.06);
+    }
+    .card::before { content: ""; position: absolute; inset: -1px; border-radius: 17px; pointer-events: none; opacity: 0; }
+
+    .screen { display: none; animation: fade-in 160ms ease; }
+    .screen.active { display: block; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+
+    .screen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+
+    .menu-card { text-align: center; padding: 2.2rem 1.2rem; }
+    .menu-actions { display: grid; gap: 1.25rem; margin-top: 2rem; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+
+    .option { display: grid; gap: .85rem; padding: 1.4rem; text-align: left; background: var(--panel-raised); border: 1px solid var(--border); border-radius: 14px; transition: transform 120ms ease, box-shadow 120ms ease; }
+    .option:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(2,6,23,.08); }
+    .option h3 { font-size: 1.12rem; }
+
+    .back-row { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+    .back-row button { padding: .38rem .8rem; border-radius: 999px; font-size: .86rem; }
+
+    .grid-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+
+    .action-block { display: grid; gap: .55rem; align-content: start; }
+    .action-block span { font-weight: 700; }
+
+    .upload-drop {
+      border: 1px dashed #93c5fd;
+      border-radius: 12px; padding: 1.4rem; text-align: center; background: var(--accent-soft);
+      display: grid; gap: .8rem; font-size: .95rem;
+    }
+    .upload-drop strong { display: block; font-weight: 700; }
+
+    .status-card { margin-top: 1.2rem; padding: 1rem; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--border); white-space: pre-wrap; font-size: .9rem; }
+
+    /* ====== Chat layout ====== */
+    .chat-layout { display: grid; gap: 1.2rem; }
+    @media (min-width: 960px) { .chat-layout { grid-template-columns: 1.6fr 1fr; } }
+    .chat-panel { display: grid; gap: 1rem; }
+
+    .chat-history { max-height: 460px; overflow-y: auto; padding: 1rem; border-radius: 12px; background: #ffffff; border: 1px solid var(--border); }
+
+    .message { margin-bottom: 1rem; padding: .75rem; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--border); }
+    .message:last-child { margin-bottom: 0; }
+    .message strong { font-size: .88rem; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); }
+    .message-content { margin-top: .45rem; font-size: .96rem; line-height: 1.5; white-space: pre-wrap; }
+
+    /* simple code block styling inside messages */
+    .message .code-block {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: .86rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);
+      padding: .7rem .8rem; margin-top: .4rem; white-space: pre-wrap; overflow-x: auto;
+    }
+
+    /* markdown styles within messages */
+    .message .md h3 { margin: .2rem 0 .4rem; font-size: 1rem; }
+    .message .md h4 { margin: .2rem 0 .35rem; font-size: .98rem; }
+    .message .md p { margin: .35rem 0; }
+    .message .md ul, .message .md ol { margin: .35rem 0 .35rem 1.2rem; }
+    .message .md li { margin: .2rem 0; }
+    .message .md code { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background: #eef2ff; padding: 0 .25rem; border-radius: 4px; border: 1px solid #e0e7ff; }
+    .message .md blockquote { margin: .35rem 0; padding: .35rem .6rem; border-left: 3px solid #c7d2fe; background: #f8fafc; border-radius: 4px; }
+
+    /* token stream accent on last assistant message */
+    .message.assistant .message-content span.token { display: inline-block; min-width: 0.28ch; border-right: 1px solid var(--accent); animation: caret 900ms steps(1) infinite; }
+    @keyframes caret { 50% { border-right-color: transparent; } }
+
+    .side-panel { display: grid; gap: 1rem; }
+
+    .sql-preview, .sql-results {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: .86rem; background: #f8fafc; border-radius: 10px; border: 1px solid var(--border); padding: .9rem; white-space: pre-wrap; overflow-x: auto;
+    }
+
+    .sql-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: .6rem; }
+    .sql-actions { display: flex; gap: .5rem; }
+
+    table.sql-table { width: 100%; border-collapse: collapse; margin-top: .6rem; font-size: .85rem; }
+    table.sql-table th, table.sql-table td { border: 1px solid rgba(148,163,184,.18); padding: .5rem .6rem; text-align: left; }
+    table.sql-table th { background: #eff6ff; color: var(--text); }
+
+    .error { color: var(--error); }
+    .loading { opacity: .75; }
+    .flex { display: flex; gap: .65rem; align-items: center; }
+
+    footer { margin-top: 1rem; display: flex; justify-content: center; }
+    .mini { font-size: .78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true"></div>
+        <h1>Plataforma GenIA</h1>
+      </div>
+      <div class="chiprow" role="list">
+        <div class="chip" role="listitem">Agentes LLM</div>
+        <div class="chip" role="listitem">RAG / pgvector</div>
+        <div class="chip" role="listitem">Copiloto SQL</div>
+      </div>
+    </header>
+
+    <section id="screen-menu" class="screen active">
+      <div class="card menu-card">
+        <h2>Potencia tus datos con IA Generativa</h2>
+        <p class="muted">Elige cómo quieres trabajar con tus datos hoy.</p>
+        <div class="menu-actions">
+          <article class="option">
+            <div>
+              <h3>Vectorizar Contenido Markdown</h3>
+              <p class="muted">Sube una fuente de conocimiento en Markdown, trocéala y guarda los embeddings directamente en Postgres/pgvector.</p>
+            </div>
+            <button data-screen="screen-vectorize">Iniciar Vectorización</button>
+          </article>
+          <article class="option">
+            <div>
+              <h3>Agentes de Lenguaje Natural a SQL</h3>
+              <p class="muted">Chatea con el equipo de agentes, inspecciona el razonamiento intermedio y revisa los resultados del SQL ejecutado.</p>
+            </div>
+            <button data-screen="screen-sql">Abrir Espacio de Trabajo</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-vectorize" class="screen">
+      <div class="back-row">
+        <button class="secondary" data-screen="screen-menu">← Menú Principal</button>
+        <span class="muted">Vectorizar Documento Markdown</span>
+      </div>
+      <div class="card">
+        <div class="screen-header">
+          <h2>Subir y Generar Embeddings</h2>
+          <span class="muted">Configura el troceado y el modelo de embeddings</span>
+        </div>
+        <form id="vector-form">
+          <div class="upload-drop">
+            <strong>Selecciona un archivo Markdown (.md o .markdown)</strong>
+            <input id="markdown-file" type="file" accept=".md,.markdown,.txt" />
+            <p id="file-status" class="muted">Aún no se ha seleccionado archivo.</p>
+          </div>
+          <div class="grid-two">
+            <label>
+              Tamaño de Fragmento
+              <input id="vector-chunk" name="chunk_size" type="number" min="1" value="{{ default_chunk_size }}" />
+              <div class="helper">Determina cómo se segmenta el contenido para generar embeddings.</div>
+            </label>
+            <label>
+              Modelo de Embeddings
+              <select id="vector-model" name="embedding_model">
+                <option value="{{ embedding_model }}" selected>{{ embedding_model }}</option>
+                <option value="text-embedding-3-small">text-embedding-3-small</option>
+                <option value="text-embedding-3-large">text-embedding-3-large</option>
+              </select>
+              <div class="helper">Los modelos text-embedding-3 aceptan dimensiones personalizadas.</div>
+            </label>
+          </div>
+          <label>
+            Etiqueta del Conjunto de Datos
+            <input id="vector-db" name="database" type="text" placeholder="ej.: Wiki de marketing" value="{{ pg_database or '' }}" required />
+            <div class="helper">Se usa para etiquetar los embeddings guardados en Postgres. Se permiten letras, números y espacios.</div>
+          </label>
+          <div class="flex">
+            <button type="submit">Vectorizar Documento</button>
+            <span id="vector-message" class="muted"></span>
+          </div>
+        </form>
+        <div id="vector-output" class="status-card" hidden></div>
+      </div>
+    </section>
+
+    <section id="screen-sql" class="screen">
+      <div class="back-row">
+        <button class="secondary" data-screen="screen-menu">← Menú Principal</button>
+        <span class="muted">Chat de Agentes: Lenguaje Natural → SQL</span>
+      </div>
+      <div class="chat-layout">
+        <div class="card chat-panel">
+          <div>
+            <h2>Pregunta a los Agentes</h2>
+            <p class="muted">Describe lo que necesitas; el equipo de agentes generará el SQL y la cadena de razonamiento.</p>
+          </div>
+          <form id="chat-form">
+            <label>
+              Tu Pregunta
+              <textarea id="chat-input" placeholder="ej.: ¿Cuál fue el ingreso total por región el último trimestre?"></textarea>
+            </label>
+            <div class="grid-two">
+              <label>
+                Base de Datos Objetivo
+                <select id="chat-database"></select>
+                <div class="helper">Elige la fuente de datos sobre la que deben razonar los agentes.</div>
+              </label>
+              <div class="action-block">
+                <span>Actualizar Fuentes</span>
+                <button id="refresh-databases" type="button" class="secondary">Recargar Bases de Datos</button>
+                <div class="helper">Obtener la lista actual de bases de datos con vectores.</div>
+              </div>
+            </div>
+            <div class="flex">
+              <button type="submit">Enviar a los Agentes</button>
+              <span id="chat-status" class="muted"></span>
+            </div>
+          </form>
+          <section>
+            <h3>Equipo de Agentes</h3>
+            <div id="chat-messages" class="chat-history"></div>
+          </section>
+        </div>
+
+        <aside class="side-panel">
+          <div class="card">
+            <div class="sql-row">
+              <h3>SQL Generado</h3>
+              <div class="sql-actions">
+                <button id="copy-sql" class="secondary" type="button">Copiar SQL</button>
+                <button id="download-report" class="secondary" type="button" disabled>Descargar Informe</button>
+              </div>
+            </div>
+            <div id="sql-preview" class="sql-preview" hidden></div>
+          </div>
+          <div class="card">
+            <h3>Resultado de la Consulta</h3>
+            <div id="sql-results" class="sql-results" hidden></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <footer>
+      <p class="mini">Hecho con ❤️ para flujos de IA Generativa • <span id="connectivity" aria-live="polite">Comprobando backend…</span></p>
+    </footer>
+  </main>
+
+  <script>
+    const API_BASE = ("{{ backend_url }}" || "").replace(/\/$/, "");
+    const DEFAULT_CHUNK_SIZE = {{ default_chunk_size }};
+    const PG_DATABASE = "{{ pg_database }}".trim();
+    const DEFAULT_EMBEDDING_MODEL = "{{ embedding_model }}";
+
+    const screens = document.querySelectorAll('.screen');
+    const menuButtons = document.querySelectorAll('button[data-screen]');
+
+    function activateScreen(id) {
+      screens.forEach((screen) => screen.classList.toggle('active', screen.id === id));
+    }
+    menuButtons.forEach((button) => button.addEventListener('click', () => activateScreen(button.dataset.screen)));
+
+    // Comprobación de conectividad
+    const connectivityEl = document.getElementById('connectivity');
+    (async () => {
+      if (!API_BASE) { connectivityEl.textContent = 'No se configuró URL de backend'; return; }
+      try {
+        const res = await fetch(`${API_BASE}/healthz`).catch(() => null);
+        if (!res || !res.ok) { connectivityEl.textContent = 'El backend no es accesible'; return; }
+        let message = 'Backend conectado';
+        try {
+          const info = await res.json();
+          if (info?.status && info.status !== 'ok') { message = `Backend ${info.status}`; }
+          if (info?.database_status && info.database_status !== 'ok') {
+            message = `${message} (base de datos ${info.database_status})`;
+          }
+        } catch (_) { /* ignore parse errors */ }
+        connectivityEl.textContent = message;
+      } catch {
+        connectivityEl.textContent = 'El backend no es accesible';
+      }
+    })();
+
+    // -------- Vectorization Flow --------
+    const vectorForm = document.getElementById('vector-form');
+    const vectorOutput = document.getElementById('vector-output');
+    const vectorMessage = document.getElementById('vector-message');
+    const markdownInput = document.getElementById('markdown-file');
+    const fileStatus = document.getElementById('file-status');
+    let fileTextCache = '';
+    let selectedFile = null;
+
+    markdownInput.addEventListener('change', (event) => {
+      const file = event.target.files?.[0];
+      fileTextCache = '';
+      selectedFile = file || null;
+      if (!file) { fileStatus.textContent = 'Aún no se ha seleccionado archivo.'; return; }
+      const name = file.name.toLowerCase();
+      if (!name.endsWith('.md') && !name.endsWith('.markdown') && !name.endsWith('.txt')) {
+        selectedFile = null;
+        fileStatus.textContent = 'Elige un archivo Markdown (.md).';
+        return;
+      }
+      fileStatus.textContent = `Cargando ${file.name}…`;
+      const reader = new FileReader();
+      reader.onload = () => {
+        fileTextCache = reader.result?.toString() ?? '';
+        const wordCount = fileTextCache.split(/\s+/).filter(Boolean).length;
+        fileStatus.textContent = `Cargado ${file.name} • ${wordCount} palabras`;
+      };
+      reader.onerror = () => { fileStatus.textContent = 'Error al leer el archivo. Inténtalo de nuevo.'; };
+      reader.readAsText(file);
+    });
+
+    vectorForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      vectorMessage.textContent = '';
+      vectorOutput.hidden = true;
+      vectorMessage.classList.remove('error');
+
+      const chunkSize = Number(document.getElementById('vector-chunk').value || DEFAULT_CHUNK_SIZE);
+      const model = document.getElementById('vector-model').value || DEFAULT_EMBEDDING_MODEL;
+      const databaseLabel = document.getElementById('vector-db').value.trim();
+      if (!selectedFile) {
+        vectorMessage.textContent = 'Elige un documento Markdown antes de subirlo.';
+        vectorMessage.classList.add('error');
+        return;
+      }
+      if (!databaseLabel) {
+        vectorMessage.textContent = 'Proporciona una etiqueta del conjunto de datos para guardar los embeddings.';
+        vectorMessage.classList.add('error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('chunk_size', String(chunkSize));
+      formData.append('embedding_model', model);
+      formData.append('database', databaseLabel);
+
+      vectorForm.classList.add('loading');
+      vectorMessage.textContent = 'Subiendo documento para vectorización…';
+
+      try {
+        const response = await fetch(`${API_BASE}/upload_md`, {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error('Error al vectorizar el documento');
+        }
+
+        const details = [
+          `Tabla: ${data?.table || 'vector_embeddings_1536'}`,
+          `Etiqueta del conjunto de datos: ${data?.database || databaseLabel}`,
+          `Tamaño de fragmento: ${data?.chunk_size ?? chunkSize}`,
+          'Documento Markdown subido correctamente.',
+        ].join('\n');
+
+        vectorOutput.textContent = details;
+        vectorOutput.hidden = false;
+        vectorMessage.textContent = 'Embeddings completados.';
+        vectorMessage.classList.remove('error');
+        vectorForm.reset();
+        selectedFile = null;
+        fileTextCache = '';
+        fileStatus.textContent = 'Aún no se ha seleccionado archivo.';
+      } catch (error) {
+        console.error(error);
+        vectorMessage.classList.add('error');
+        vectorMessage.textContent = error instanceof Error ? error.message : 'Error inesperado al vectorizar.';
+      } finally {
+        vectorForm.classList.remove('loading');
+      }
+    });
+
+    // -------- Agentic Chat Flow --------
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatDatabase = document.getElementById('chat-database');
+    const refreshDatabasesButton = document.getElementById('refresh-databases');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatStatus = document.getElementById('chat-status');
+    const sqlPreview = document.getElementById('sql-preview');
+    const sqlResults = document.getElementById('sql-results');
+    const copySqlBtn = document.getElementById('copy-sql');
+
+    refreshDatabasesButton.addEventListener('click', loadDatabases);
+    copySqlBtn.addEventListener('click', () => {
+      if (sqlPreview.hidden) return;
+      navigator.clipboard.writeText(sqlPreview.textContent || '').then(() => {
+        copySqlBtn.textContent = '¡Copiado!';
+        setTimeout(() => (copySqlBtn.textContent = 'Copiar'), 1200);
+      });
+    });
+
+    async function loadDatabases() {
+      chatStatus.textContent = 'Actualizando bases de datos…';
+      try {
+        const response = await fetch(`${API_BASE}/vector_databases?chunk_size=${DEFAULT_CHUNK_SIZE}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error('Error al obtener las bases de datos');
+
+        chatDatabase.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Selección automática según el contexto del agente';
+        chatDatabase.appendChild(defaultOption);
+
+        const tables = data.tables || data.databases || [];
+        for (const tableName of tables) {
+          const option = document.createElement('option');
+          option.value = tableName; option.textContent = tableName; if (tableName === PG_DATABASE) option.selected = true;
+          chatDatabase.appendChild(option);
+        }
+        chatStatus.textContent = tables.length ? `Se cargaron ${tables.length} tablas.` : 'Aún no hay tablas.';
+      } catch (error) {
+        console.error(error);
+        chatStatus.textContent = error instanceof Error ? error.message : 'Error al cargar las bases de datos.';
+      }
+    }
+
+    function toTitleCase(text) {
+      if (!text) return '';
+      return text
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function friendlyLabel(role, name) {
+      const map = { planner: 'Planificador', retriever: 'Recuperador', sql_agent: 'Agente SQL', feedback: 'Comentarios', user: 'Usuario', assistant: 'Asistente' };
+      if (name && map[name.toLowerCase()]) return map[name.toLowerCase()];
+      if (name) return toTitleCase(name);
+      if (role && map[role.toLowerCase()]) return map[role.toLowerCase()];
+      return toTitleCase(role || 'Mensaje');
+    }
+
+    // --- Minimal, safe Markdown renderer (subset) ---
+    function applyInlineFormatting(text) {
+      const frag = document.createDocumentFragment();
+      if (!text) return frag;
+      const codeSplit = text.split(/(`[^`]*`)/g);
+      for (const part of codeSplit) {
+        if (part.length >= 2 && part.startsWith('`') && part.endsWith('`')) {
+          const code = document.createElement('code');
+          code.textContent = part.slice(1, -1);
+          frag.appendChild(code);
+          continue;
+        }
+        // links (http/https only)
+        let remaining = part;
+        const linkRe = /\[([^\]]+)\]\((https?:[^\)\s]+)\)/g;
+        let lastIndex = 0; let m;
+        const tmp = document.createDocumentFragment();
+        while ((m = linkRe.exec(part)) !== null) {
+          const before = part.slice(lastIndex, m.index);
+          if (before) tmp.appendChild(document.createTextNode(before));
+          const a = document.createElement('a');
+          a.textContent = m[1]; a.href = m[2]; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          tmp.appendChild(a);
+          lastIndex = m.index + m[0].length;
+        }
+        const tail = part.slice(lastIndex);
+        if (tmp.childNodes.length) { if (tail) tmp.appendChild(document.createTextNode(tail)); remaining = ''; frag.appendChild(tmp); }
+        if (remaining) {
+          // bold then italics (non-greedy)
+          const chunks = [];
+          let s = remaining; let match;
+          const boldRe = /\*\*([^*]+)\*\*/g;
+          let idx = 0;
+          while ((match = boldRe.exec(s)) !== null) {
+            if (match.index > idx) chunks.push({ t: 'text', v: s.slice(idx, match.index) });
+            chunks.push({ t: 'strong', v: match[1] });
+            idx = match.index + match[0].length;
+          }
+          if (idx < s.length) chunks.push({ t: 'text', v: s.slice(idx) });
+          const out = document.createDocumentFragment();
+          for (const ch of chunks) {
+            if (ch.t === 'text') {
+              // italics inside leftovers
+              let rest = ch.v; let iMatch; const italRe = /(^|\W)\*([^*]+)\*(?=\W|$)/g; let i = 0; const sub = document.createDocumentFragment();
+              while ((iMatch = italRe.exec(rest)) !== null) {
+                const pre = rest.slice(i, iMatch.index + iMatch[1].length);
+                if (pre) sub.appendChild(document.createTextNode(pre));
+                const em = document.createElement('em'); em.textContent = iMatch[2]; sub.appendChild(em);
+                i = iMatch.index + iMatch[0].length;
+              }
+              const tail2 = rest.slice(i);
+              if (tail2) sub.appendChild(document.createTextNode(tail2));
+              out.appendChild(sub);
+            } else if (ch.t === 'strong') { const b = document.createElement('strong'); b.textContent = ch.v; out.appendChild(b); }
+          }
+          frag.appendChild(out);
+        }
+      }
+      return frag;
+    }
+
+    function renderMarkdown(mdText) {
+      const container = document.createElement('div');
+      container.className = 'md';
+      if (!mdText || typeof mdText !== 'string') return container;
+
+      const lines = mdText.replace(/\r\n?/g, '\n').split('\n');
+      let i = 0; let inCode = false; let codeLang = ''; let codeLines = [];
+      let listMode = null; let listItems = [];
+      let paraLines = [];
+
+      function flushParagraph() {
+        if (!paraLines.length) return;
+        const p = document.createElement('p');
+        p.appendChild(applyInlineFormatting(paraLines.join(' ')));
+        container.appendChild(p); paraLines = [];
+      }
+      function flushList() {
+        if (!listMode || !listItems.length) return;
+        const el = document.createElement(listMode === 'ol' ? 'ol' : 'ul');
+        for (const item of listItems) { const li = document.createElement('li'); li.appendChild(applyInlineFormatting(item)); el.appendChild(li); }
+        container.appendChild(el); listMode = null; listItems = [];
+      }
+      function flushCode() {
+        if (!inCode) return;
+        const pre = document.createElement('pre'); pre.className = 'code-block'; pre.textContent = codeLines.join('\n'); container.appendChild(pre);
+        inCode = false; codeLang = ''; codeLines = [];
+      }
+
+      while (i < lines.length) {
+        const line = lines[i];
+        // fenced code
+        const fence = line.match(/^```\s*([A-Za-z0-9_+-]*)\s*$/);
+        if (fence) {
+          if (inCode) { flushParagraph(); flushList(); flushCode(); }
+          else { flushParagraph(); flushList(); inCode = true; codeLang = fence[1] || ''; }
+          i += 1; continue;
+        }
+        if (inCode) { codeLines.push(line); i += 1; continue; }
+
+        // blank line -> flush paragraph/list
+        if (!line.trim()) { flushParagraph(); flushList(); i += 1; continue; }
+
+        // headings
+        const h = line.match(/^(#{1,6})\s+(.+)$/);
+        if (h) {
+          flushParagraph(); flushList();
+          const level = Math.min(h[1].length, 4); // keep headings small in bubbles
+          const hx = document.createElement('h' + (level + 2));
+          hx.textContent = h[2].trim();
+          container.appendChild(hx);
+          i += 1; continue;
+        }
+
+        // blockquote
+        const bq = line.match(/^>\s?(.*)$/);
+        if (bq) {
+          flushParagraph(); flushList();
+          const q = document.createElement('blockquote'); q.appendChild(applyInlineFormatting(bq[1])); container.appendChild(q);
+          i += 1; continue;
+        }
+
+        // lists
+        const ul = line.match(/^\s*[-*+]\s+(.+)$/);
+        const ol = line.match(/^\s*\d+\.\s+(.+)$/);
+        if (ul || ol) {
+          flushParagraph();
+          const content = (ul ? ul[1] : ol[1]).trim();
+          const mode = ol ? 'ol' : 'ul';
+          if (listMode && listMode !== mode) flushList();
+          listMode = mode; listItems.push(content);
+          i += 1; continue;
+        }
+
+        // paragraph accumulation
+        paraLines.push(line.trim());
+        i += 1;
+      }
+      flushParagraph(); flushList(); flushCode();
+      return container;
+    }
+
+    function renderMessages(messages) {
+      chatMessages.innerHTML = '';
+      if (!messages?.length) {
+        chatMessages.innerHTML = '<p class="muted">Aún no hay mensajes. Envía una consulta para iniciar la conversación.</p>';
+        return;
+      }
+      for (const message of messages) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message ' + (message.role === 'assistant' ? 'assistant' : '');
+
+        const heading = document.createElement('strong');
+        heading.textContent = friendlyLabel(message.role, message.name);
+        wrapper.appendChild(heading);
+
+        const fragment = document.createElement('div');
+        fragment.className = 'message-content';
+        if (message.content) {
+          const txt = String(message.content).trim();
+          // Render markdown subset safely
+          const md = renderMarkdown(txt);
+          fragment.appendChild(md);
+          if (message.role === 'assistant') {
+            const caret = document.createElement('span');
+            caret.className = 'token';
+            fragment.appendChild(document.createTextNode(' '));
+            fragment.appendChild(caret);
+          }
+        } else if (message.function_call) {
+          fragment.textContent = JSON.stringify(message.function_call, null, 2);
+        } else {
+          fragment.textContent = '[sin contenido]';
+        }
+        wrapper.appendChild(fragment);
+        chatMessages.appendChild(wrapper);
+      }
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function extractSql(messages) {
+      // Only accept SQL coming from the agent named 'sql_agent'
+      if (!messages?.length) return null;
+      for (let idx = messages.length - 1; idx >= 0; idx -= 1) {
+        const message = messages[idx];
+        const name = (message?.name || '').toLowerCase();
+        if (name !== 'sql_agent') continue;
+        if (message.function_call?.arguments) {
+          try {
+            const args = JSON.parse(message.function_call.arguments);
+            if (typeof args.query === 'string' && args.query.trim().length) return args.query.trim();
+            if (typeof args.sql === 'string' && args.sql.trim().length) return args.sql.trim();
+          } catch (error) { console.warn('Failed to parse function call arguments', error); }
+        }
+        if (typeof message.content === 'string') {
+          const blockMatch = message.content.match(/```sql\s*([\s\S]+?)```/i);
+          if (blockMatch) return blockMatch[1].trim();
+          const selectMatch = message.content.match(/(SELECT[\s\S]+?)(?:;|$)/i);
+          if (selectMatch) return selectMatch[1].trim();
+        }
+      }
+      return null;
+    }
+
+    function inferTableFromSql(sql) {
+      if (typeof sql !== 'string' || !sql.trim().length) return null;
+      const text = sql;
+      const identifierPattern = /(?:from|join)\s+([\w".]+)(?=\s|$|,)/gi;
+      const seen = new Set();
+
+      function normalize(identifier) {
+        if (!identifier) return null;
+        let cleaned = identifier.replace(/[`"']/g, '');
+        const dotIndex = cleaned.lastIndexOf('.');
+        if (dotIndex !== -1) cleaned = cleaned.slice(dotIndex + 1);
+        cleaned = cleaned.trim();
+        if (!cleaned) return null;
+        if (!/^[_A-Za-z][_A-Za-z0-9]*$/.test(cleaned)) return null;
+        return cleaned;
+      }
+
+      function isCte(candidate) {
+        if (!candidate) return false;
+        if (seen.has(candidate)) return true;
+        const pattern = new RegExp(`\\bwith\\s+${candidate}\\s+as\\b`, 'i');
+        return pattern.test(text);
+      }
+
+      let match;
+      while ((match = identifierPattern.exec(text)) !== null) {
+        const candidate = normalize(match[1]);
+        if (!candidate || isCte(candidate)) {
+          if (candidate) seen.add(candidate);
+          continue;
+        }
+        return candidate;
+      }
+      return null;
+    }
+
+    function renderSqlTable({ rows, columns }) {
+      sqlResults.innerHTML = '';
+      if (!rows?.length) { sqlResults.textContent = 'Consulta ejecutada. No se devolvieron filas.'; sqlResults.hidden = false; return; }
+      const maxColumns = rows.reduce((m, r) => Math.max(m, r.length), 0);
+      const table = document.createElement('table'); table.className = 'sql-table';
+      const thead = document.createElement('thead'); const headerRow = document.createElement('tr');
+      // Prefer server-provided column names; fallback to generic labels
+      const safeColumns = Array.isArray(columns) && columns.length ? columns : Array.from({ length: maxColumns }, (_, i) => `columna_${i + 1}`);
+      for (let col = 0; col < maxColumns; col += 1) { const th = document.createElement('th'); th.textContent = safeColumns[col] ?? `columna_${col + 1}`; headerRow.appendChild(th); }
+      thead.appendChild(headerRow); table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      for (const row of rows) { const tr = document.createElement('tr'); for (let col = 0; col < maxColumns; col += 1) { const td = document.createElement('td'); const value = row[col]; td.textContent = value == null ? '∅' : String(value); tr.appendChild(td);} tbody.appendChild(tr);} table.appendChild(tbody);
+      sqlResults.appendChild(table); sqlResults.hidden = false;
+    }
+
+    async function executeQuery(sql, table) {
+      const payload = { query: sql };
+      if (PG_DATABASE) { payload.database = PG_DATABASE; }
+      if (table) { payload.table = table; }
+      const response = await fetch(`${API_BASE}/execute_query`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.detail || 'Error al ejecutar la consulta SQL');
+      return { rows: data.rows || [], columns: data.columns || [] };
+    }
+
+    let lastMessages = [];
+    let lastSql = null;
+    let lastResult = { rows: [], columns: [] };
+    let lastPrompt = '';
+
+    chatForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      chatStatus.textContent = '';
+      sqlPreview.hidden = true; sqlResults.hidden = true;
+
+      const prompt = chatInput.value.trim();
+      if (!prompt) { chatStatus.textContent = 'Escribe una pregunta para los agentes.'; return; }
+      lastPrompt = prompt;
+
+      const selectedTable = chatDatabase.value.trim();
+      const chatPayload = { task: prompt };
+      if (selectedTable) { chatPayload.table = selectedTable; }
+
+      chatForm.classList.add('loading');
+      chatStatus.textContent = 'Los agentes están pensando…';
+
+      try {
+        const response = await fetch(`${API_BASE}/agents_chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(chatPayload) });
+        const data = await response.json();
+        if (!response.ok) throw new Error('Falló el chat de agentes');
+
+        lastMessages = Array.isArray(data.messages) ? data.messages : [];
+        renderMessages(lastMessages);
+        chatStatus.textContent = 'Conversación actualizada.';
+
+        const sql = extractSql(lastMessages);
+        if (!sql) { sqlPreview.hidden = false; sqlPreview.textContent = 'Aún no se detectó SQL en la respuesta del agente.'; sqlResults.hidden = true; return; }
+
+        sqlPreview.hidden = false; sqlPreview.textContent = sql; lastSql = sql;
+        const tableForQuery = inferTableFromSql(sql) || null;
+        try { const result = await executeQuery(sql, tableForQuery); lastResult = result; renderSqlTable(result); document.getElementById('download-report').disabled = false; }
+        catch (queryError) { console.error(queryError); sqlResults.hidden = false; sqlResults.textContent = queryError instanceof Error ? queryError.message : 'Error al ejecutar el SQL generado.'; }
+      } catch (error) {
+        console.error(error); chatStatus.textContent = error instanceof Error ? error.message : 'Error inesperado durante el chat de agentes.';
+      } finally { chatForm.classList.remove('loading'); }
+    });
+
+    // Copy SQL button
+    document.getElementById('copy-sql').addEventListener('click', async () => {
+      const sql = (sqlPreview.textContent || '').trim();
+      if (!sql) return;
+      try { await navigator.clipboard.writeText(sql); } catch (_) {}
+    });
+
+    function findMessageContentByName(messages, name) {
+      if (!Array.isArray(messages)) return '';
+      for (const m of messages) {
+        if ((m?.name || '').toLowerCase() === String(name).toLowerCase()) {
+          const content = typeof m.content === 'string' ? m.content.trim() : '';
+          if (content) return content;
+        }
+      }
+      return '';
+    }
+
+    async function generateAndDownloadReport() {
+      const button = document.getElementById('download-report');
+      if (!lastSql || !lastResult) return;
+      button.disabled = true; button.textContent = 'Preparando…';
+      try {
+        const payload = {
+          question: lastPrompt || '',
+          sql: lastSql,
+          columns: Array.isArray(lastResult.columns) ? lastResult.columns : [],
+          rows: Array.isArray(lastResult.rows) ? lastResult.rows : [],
+          plan: findMessageContentByName(lastMessages, 'planner'),
+          feedback: findMessageContentByName(lastMessages, 'feedback'),
+        };
+        const response = await fetch(`${API_BASE}/generate_report_pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/pdf' },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) { throw new Error('Error al generar el informe'); }
+        const blob = await response.blob();
+        const disp = response.headers.get('Content-Disposition') || '';
+        const match = disp.match(/filename\s*=\s*"?([^";]+)"?/i);
+        const filename = match ? match[1] : 'informe-nl2sql.pdf';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+        alert(err instanceof Error ? err.message : 'Error al generar el informe');
+      } finally {
+        button.textContent = 'Descargar Informe'; button.disabled = false;
+      }
+    }
+
+    document.getElementById('download-report').addEventListener('click', generateAndDownloadReport);
+
+    // Initialize default UI state
+    loadDatabases();
+    renderMessages([]);
+  </script>
+</body>
+</html>
