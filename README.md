@@ -41,6 +41,37 @@ require review, and agent feedback does not guarantee correctness.
 The project should be evaluated with a controlled demonstration
 database before considering use with real business data.
 
+## Example: query the demonstration database
+
+The repository includes a fiscal consulting demonstration dataset.
+Its schema and sample records are defined in
+[`20_fiscal_consulting_demo.sql`](databases/_initdb/20_fiscal_consulting_demo.sql).
+
+**Question**
+
+> How many offices are there in the fiscal_consulting_demo schema?
+
+**Reference SQL**
+
+```sql
+SELECT COUNT(*) AS office_count
+FROM fiscal_consulting_demo.offices;
+```
+
+**Expected result with the unmodified seed data**
+
+| office_count |
+|-------------:|
+| 4 |
+
+This expected value comes from the four office records in the seed
+script. It is a reference case, not a recorded end-to-end agent run.
+
+To validate the workflow, load the demonstration data, provide the
+relevant schema context to the application and submit the question.
+Compare the returned result with the reference value above.
+The generated SQL may differ while producing the same result.
+
 ## How It Works
 
 1) You ask a question in plain English/Spanish.
