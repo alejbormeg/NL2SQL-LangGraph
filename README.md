@@ -1,13 +1,45 @@
-# NL2SQL-LangGraph ✨🧠➡️🗃️➡️📊
+# NL2SQL with LangGraph
 
-Ask questions in natural language and get executable SQL, results, and beautiful reports — powered by LangGraph/LangChain, FastAPI, Starlite, and PostgreSQL + pgvector.
+A proof of concept for querying PostgreSQL in natural language
+and turning query results into reports.
 
-- 🤖 NL→SQL agents with planning, feedback, and RAG context
-- 🧰 Vector search on `pgvector` tables you control
-- ⚡ FastAPI backend + Starlite micro frontend
-- 🐳 1‑command Docker Compose for full stack (DB, pgAdmin, backend, frontend)
-- 🧾 One‑click PDF report generation (WeasyPrint fallback)
+## The problem
 
+Answering a business question from a relational database requires
+understanding its schema and writing SQL. This project explores
+a workflow where users ask questions in English or Spanish,
+inspect the generated query and view the results through a web interface.
+
+## Approach
+
+The application combines retrieval of database context with an
+agent workflow for planning, SQL generation and feedback.
+
+A FastAPI backend connects the workflow to PostgreSQL and a
+Starlite web interface. Supporting context is stored with pgvector.
+The application also provides Markdown and PDF report generation.
+
+Docker Compose packages the application and its supporting services
+for local experimentation.
+
+## Engineering scope
+
+The repository brings together:
+
+- Agent orchestration with LangGraph/LangChain.
+- Context retrieval using PostgreSQL and pgvector.
+- Backend APIs, database integration and a web interface.
+- Container configuration for running the stack locally.
+
+A legacy AutoGen prototype is retained for reference.
+
+## Project status
+
+This is an experimental proof of concept. Generated SQL and reports
+require review, and agent feedback does not guarantee correctness.
+
+The project should be evaluated with a controlled demonstration
+database before considering use with real business data.
 
 ## How It Works
 
